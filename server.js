@@ -1,4 +1,5 @@
 //mongodb+srv://rolriverag:ZsWcXYg5ubzkdUb9@proyecto.zxrqy.mongodb.net/?retryWrites=true&w=majority&appName=Proyecto
+const cors = require('cors');
 const {MongoClient, ServerApiVersion, ObjectId} = require("mongodb");
 const bodyParser = require("body-parser");
 const express = require("express");
@@ -6,6 +7,9 @@ const app = express();
 const port = 3002;
 const uri = "mongodb+srv://rolriverag:ZsWcXYg5ubzkdUb9@proyecto.zxrqy.mongodb.net/?retryWrites=true&w=majority&appName=Proyecto";
 app.use(express.json());
+app.use(cors({
+    origin: 'http://localhost:3000'  
+}));
 
 //app.use(express.urlencoded({extended: true}));
 var urlEncodeParser = bodyParser.urlencoded({extended: true});
@@ -77,6 +81,56 @@ app.post("/crearUser", async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
+
+app.post("/login", async (req, res) => {
+    try {
+        const { user, contra } = req.body;
+
+        if (!user || !contra) {
+            return res.status(400).send("Faltan parámetros requeridos");
+        }
+
+        const database = client.db("sistema");
+        const usuarios = database.collection("usuarios");
+
+        // Buscar el usuario en la base de datos
+        const usuario = await usuarios.findOne({ user: user });
+
+        if (!usuario) {
+            return res.status(400).send("Usuario no encontrado");
+        }
+
+        // Verificar la contraseña
+        if (usuario.contra !== contra) {
+            return res.status(400).send("Contraseña incorrecta");
+        }
+
+        // Validar según el tipo de usuario
+        switch (usuario.tipo) {
+            case 'Administrador':
+                // Si es administrador, solo valida el usuario y la contraseña
+                return res.status(200).send("Inicio de sesión exitoso como administrador");
+            
+            case 'Maestro':
+                // Si es maestro, además de la contraseña y usuario, verifica el permiso
+                if (usuario.permiso !== 'S') {
+                    return res.status(400).send("Permiso denegado. El permiso debe estar en 'S'");
+                }
+                return res.status(200).send("Inicio de sesión exitoso como maestro");
+
+            case 'Alumno':
+                // Si es estudiante, solo valida el usuario y la contraseña
+                return res.status(200).send("Inicio de sesión exitoso como alumno");
+
+            default:
+                return res.status(400).send("Tipo de usuario no válido");
+        }
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send("Algo salió mal, intenta de nuevo");
     }
 });
 
