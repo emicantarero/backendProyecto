@@ -89,7 +89,7 @@ app.post("/login", async (req, res) => {
         const { user, contra } = req.body;
 
         if (!user || !contra) {
-            return res.status(400).send("Faltan parámetros requeridos");
+            return res.status(400).json({ message: "Faltan parámetros requeridos" });
         }
 
         const database = client.db("sistema");
@@ -99,40 +99,41 @@ app.post("/login", async (req, res) => {
         const usuario = await usuarios.findOne({ user: user });
 
         if (!usuario) {
-            return res.status(400).send("Usuario no encontrado");
+            return res.status(400).json({ message: "Usuario no encontrado" });
         }
 
         // Verificar la contraseña
         if (usuario.contra !== contra) {
-            return res.status(400).send("Contraseña incorrecta");
+            return res.status(400).json({ message: "Contraseña incorrecta" });
         }
 
         // Validar según el tipo de usuario
         switch (usuario.tipo) {
             case 'Administrador':
                 // Si es administrador, solo valida el usuario y la contraseña
-                return res.status(200).send("Inicio de sesión exitoso como administrador");
+                return res.status(200).json({ message: "Inicio de sesión exitoso como administrador", usuario });
             
             case 'Maestro':
                 // Si es maestro, además de la contraseña y usuario, verifica el permiso
                 if (usuario.permiso !== 'S') {
-                    return res.status(400).send("Permiso denegado. El permiso debe estar en 'S'");
+                    return res.status(400).json({ message: "Permiso denegado. El permiso debe estar en 'S'" });
                 }
-                return res.status(200).send("Inicio de sesión exitoso como maestro");
+                return res.status(200).json({ message: "Inicio de sesión exitoso como maestro", usuario });
 
             case 'Alumno':
                 // Si es estudiante, solo valida el usuario y la contraseña
-                return res.status(200).send("Inicio de sesión exitoso como alumno");
+                return res.status(200).json({ message: "Inicio de sesión exitoso como alumno", usuario });
 
             default:
-                return res.status(400).send("Tipo de usuario no válido");
+                return res.status(400).json({ message: "Tipo de usuario no válido" });
         }
 
     } catch (error) {
         console.log(error);
-        return res.status(500).send("Algo salió mal, intenta de nuevo");
+        return res.status(500).json({ message: "Algo salió mal, intenta de nuevo" });
     }
 });
+
 
 
 process.on("SIGINT", async () => {
