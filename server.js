@@ -214,20 +214,47 @@ app.delete("/eliminarUsuario", async (req, res) => {
 
 app.post("/crearExamen", async (req, res) => {
     try {
-        const {nombre} = req.body;
-        if (!nombre){
+        const {titulo} = req.body;
+        if (!titulo){
             return res.status(400).send("Faltan parametros requeridos");
         }
         const database = client.db("sistema");
         const usuarios = database.collection("Examen");
         const doc = {
-            nombre: nombre
+            titulo: titulo
         }
         const resultado = await usuarios.insertOne(doc);
         res.status(200).send("Examen creado exitosamente");
     } catch (error) {
         console.log(error);
         return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
+
+app.post("/crearPregunta", async (req, res) => {
+    try {
+        const { pregunta, respuesta, opciones } = req.body;
+
+        if (!pregunta || !respuesta || !opciones || !Array.isArray(opciones)) {
+            return res.status(400).json({ message: "Faltan parámetros requeridos o el formato es incorrecto" });
+        }
+
+        const database = client.db("sistema");
+        const preguntas = database.collection("preguntas");
+
+        const doc = {
+            pregunta: pregunta,
+            respuesta: respuesta,
+            opciones: opciones
+        };
+
+        const resultado = await preguntas.insertOne(doc);
+
+        return res.status(200).json({ message: "Pregunta registrada exitosamente", pregunta: doc });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Algo salió mal, intenta de nuevo" });
     }
 });
 
