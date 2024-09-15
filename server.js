@@ -259,6 +259,35 @@ app.post("/crearPregunta", async (req, res) => {
 });
 
 
+app.post("/asociarAlumno", async (req, res) => {
+    try {
+        const { examId, user } = req.body;
+
+        if (!examId || !user) {
+            return res.status(400).json({ message: "Faltan parámetros requeridos" });
+        }
+
+        const database = client.db("sistema");
+        const examenes = database.collection("Examen");
+
+        const resultado = await examenes.updateOne(
+            { _id: new ObjectId(examId) },  
+            { $addToSet: { alumnos_asociados: user } }  
+        );
+
+        if (resultado.modifiedCount === 0) {
+            return res.status(404).json({ message: "Examen no encontrado o usuario ya asociado" });
+        }
+
+        return res.status(200).json({ message: "Alumno asociado exitosamente al examen" });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Algo salió mal, intenta de nuevo" });
+    }
+});
+
+
 process.on("SIGINT", async () => {
     try {
         console.log("Deteniendo la aplicación...");
