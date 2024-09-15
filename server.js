@@ -292,21 +292,23 @@ app.get("/listarPreguntas", async (req, res) => {
     try {
         const database = client.db("sistema");
         const preguntas = database.collection("preguntas");
+        
+        // Contar documentos en la colección "preguntas"
         const query = {};
-        const options = {
-            sort: {},
-        };
-        const resultados = preguntas.find(query, options);
-        if ((await examenes.countDocuments(query)) === 0) {
+        const count = await preguntas.countDocuments(query);
+        
+        if (count === 0) {
             return res.status(500).send("No se encontraron preguntas");
         } else {
+            const resultados = preguntas.find(query);
             let arr = [];
             for await (const doc of resultados) {
                 arr.push(doc);
             }
-            return res.status(200).send({arr});
+            return res.status(200).send(arr); // Enviar directamente el array de preguntas
         }
     } catch (error) {
+        console.error("Error al obtener preguntas:", error);
         return res.status(500).send("Algo salió mal, intentalo de nuevo");
     }
 });
@@ -314,19 +316,21 @@ app.get("/listarPreguntas", async (req, res) => {
 
 app.post("/registrarExamen", async (req, res) => {
     try {
-        const { idExamen, idAlumno, nota} = req.body;
+        const { idAlumno, nota } = req.body;
 
-        if (!idExamen || !idAlumno || !nota ) {
+        if (!idAlumno || nota === undefined) {
             return res.status(400).json({ message: "Faltan parámetros requeridos o el formato es incorrecto" });
         }
 
         const database = client.db("sistema");
         const exa = database.collection("examenes_realizados");
 
+        // Aquí puedes agregar información adicional si es necesario
+        // Por ejemplo, podrías registrar la fecha y hora en que se realizó el examen
         const doc = {
-            pregunta: pregunta,
-            respuesta: respuesta,
-            opciones: opciones
+            idAlumno,
+            nota,
+            fecha: new Date() // Registrar la fecha y hora del examen
         };
 
         const resultado = await exa.insertOne(doc);
@@ -339,6 +343,29 @@ app.post("/registrarExamen", async (req, res) => {
     }
 });
 
+app.get("/listarExamenHecho", async (req, res) => {
+    try {
+        const database = client.db("sistema");
+        const preguntas = database.collection("examenes_realizados");
+        
+        const query = {};
+        const count = await preguntas.countDocuments(query);
+        
+        if (count === 0) {
+            return res.status(500).send("No se encontraron examenes_realizados");
+        } else {
+            const resultados = preguntas.find(query);
+            let arr = [];
+            for await (const doc of resultados) {
+                arr.push(doc);
+            }
+            return res.status(200).send(arr); // Enviar directamente el array de preguntas
+        }
+    } catch (error) {
+        console.error("Error al obtener examenes_realizados:", error);
+        return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
 
 process.on("SIGINT", async () => {
     try {
