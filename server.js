@@ -288,6 +288,29 @@ app.post("/asociarAlumno", async (req, res) => {
 });
 
 
+app.get("/listarPreguntas", async (req, res) => {
+    try {
+        const database = client.db("sistema");
+        const preguntas = database.collection("preguntas");
+        const query = {};
+        const options = {
+            sort: {},
+        };
+        const resultados = preguntas.find(query, options);
+        if ((await examenes.countDocuments(query)) === 0) {
+            return res.status(500).send("No se encontraron preguntas");
+        } else {
+            let arr = [];
+            for await (const doc of resultados) {
+                arr.push(doc);
+            }
+            return res.status(200).send({arr});
+        }
+    } catch (error) {
+        return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
+
 process.on("SIGINT", async () => {
     try {
         console.log("Deteniendo la aplicación...");
