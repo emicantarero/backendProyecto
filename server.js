@@ -135,6 +135,59 @@ app.post("/login", async (req, res) => {
 });
 
 
+app.get("/listarExamenes", async (req, res) => {
+    try {
+        const database = client.db("sistema");
+        const examenes = database.collection("Examen");
+        const query = {};
+        const options = {
+            sort: {},
+        };
+        const resultados = examenes.find(query, options);
+        if ((await examenes.countDocuments(query)) === 0) {
+            return res.status(500).send("No se encontraron examenes");
+        } else {
+            let arr = [];
+            for await (const doc of resultados) {
+                arr.push(doc);
+            }
+            return res.status(200).send({arr});
+        }
+    } catch (error) {
+        return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
+
+app.put("/cambiarPermiso", async (req, res) => {
+    try {
+        const { userId } = req.body; 
+
+        if (!userId) {
+            return res.status(400).send("Falta el ID del usuario");
+        }
+
+        const database = client.db("sistema");
+        const usuarios = database.collection("usuarios");
+
+        const resultado = await usuarios.updateOne(
+            { _id: new ObjectId(userId) }, // Asegúrate de que el ID sea del tipo ObjectId
+            { $set: { permiso: "S" } }
+        );
+
+        if (resultado.matchedCount === 0) {
+            return res.status(404).send("Usuario no encontrado");
+        }
+
+        if (resultado.modifiedCount === 0) {
+            return res.status(500).send("No se pudo actualizar el permiso");
+        }
+
+        return res.status(200).send("Permiso actualizado exitosamente");
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
 
 process.on("SIGINT", async () => {
     try {
