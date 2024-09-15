@@ -211,6 +211,27 @@ app.delete("/eliminarUsuario", async (req, res) => {
     }
 });
 
+
+app.post("/crearExamen", async (req, res) => {
+    try {
+        const {nombre} = req.body;
+        if (!nombre){
+            return res.status(400).send("Faltan parametros requeridos");
+        }
+        const database = client.db("sistema");
+        const usuarios = database.collection("Examen");
+        const doc = {
+            nombre: nombre
+        }
+        const resultado = await usuarios.insertOne(doc);
+        res.status(200).send("Examen creado exitosamente");
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send("Algo salió mal, intentalo de nuevo");
+    }
+});
+
+
 process.on("SIGINT", async () => {
     try {
         console.log("Deteniendo la aplicación...");
