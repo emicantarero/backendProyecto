@@ -189,6 +189,28 @@ app.put("/cambiarPermiso", async (req, res) => {
     }
 });
 
+app.delete("/eliminarUsuario", async (req, res) => {
+    try {
+        const database = client.db("sistema");
+        const usuarios = database.collection("usuarios");
+        const query = {_id: new ObjectId(req.body._id)};
+        const result = await usuarios.deleteOne(query);
+        if (result.deletedCount === 1) {
+            return res
+                .status(200)
+                .send("Se eliminó el usuario correctamente");
+        } else {
+            return res
+                .status(500)
+                .send("No existe un usuario con ese _id");
+        }
+    } catch (error) {
+        return res
+            .status(500)
+            .send("Ocurrió un error, intente de nuevo mas tarde");
+    }
+});
+
 process.on("SIGINT", async () => {
     try {
         console.log("Deteniendo la aplicación...");
