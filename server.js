@@ -311,6 +311,35 @@ app.get("/listarPreguntas", async (req, res) => {
     }
 });
 
+
+app.post("/registrarExamen", async (req, res) => {
+    try {
+        const { idExamen, idAlumno, nota} = req.body;
+
+        if (!idExamen || !idAlumno || !nota ) {
+            return res.status(400).json({ message: "Faltan parámetros requeridos o el formato es incorrecto" });
+        }
+
+        const database = client.db("sistema");
+        const exa = database.collection("examenes_realizados");
+
+        const doc = {
+            pregunta: pregunta,
+            respuesta: respuesta,
+            opciones: opciones
+        };
+
+        const resultado = await exa.insertOne(doc);
+
+        return res.status(200).json({ message: "Examen registrado exitosamente", doc });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Algo salió mal, intenta de nuevo" });
+    }
+});
+
+
 process.on("SIGINT", async () => {
     try {
         console.log("Deteniendo la aplicación...");
